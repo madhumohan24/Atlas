@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.MyViewHolder> {
-    private Context context;
+    private final Context context;
     ListActivity activity;
-    private List<ForecastData.forecastlist> mCountryList;
+    private final List<ForecastData.forecastlist> mCountryList;
 
     public WeatherAdapter(Context context, ListActivity activity, ArrayList<ForecastData.forecastlist> mCountryList) {
         this.context = context;

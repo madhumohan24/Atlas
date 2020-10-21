@@ -12,8 +12,6 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class APIClient {
 
-    private static Retrofit retrofit = null;
-    private static OkHttpClient client;
     public static String BASE_URL;
 
     public static Retrofit getClient(String type) {
@@ -23,20 +21,19 @@ public class APIClient {
             BASE_URL = key.OPENWEATHERAPI;
         }
 
-        client = new OkHttpClient();
+        OkHttpClient client;
         client = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60 / 2, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .cache(null)
                 .build();
-                retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
 
-        return retrofit;
+        return new Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .addConverterFactory(ScalarsConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(client)
+        .build();
     }
 }

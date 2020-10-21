@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.MyViewHolder> implements Filterable {
-    private Context context;
+    private final Context context;
     private List<CountryDataDB> mCountryList;
     ListActivity activity;
     List<CountryDataDB> arraylist =  new ArrayList<>();
@@ -135,11 +135,6 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.MyViewHo
                 }
             });
         }
-    }
-    public void updatelist(){
-        arraylist.clear();
-        arraylist = mCountryList;
-        notifyDataSetChanged();
     }
 
 }

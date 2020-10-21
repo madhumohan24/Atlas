@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.LimitLine;
-import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -35,15 +34,15 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.zoho.atlas.keys.key;
-import com.zoho.atlas.model.CountryDataDB;
-import com.zoho.atlas.model.ForecastData;
-import com.zoho.atlas.adapter.MapsWeatherAdapter;
 import com.zoho.atlas.R;
+import com.zoho.atlas.adapter.MapsWeatherAdapter;
 import com.zoho.atlas.api.APIClient;
 import com.zoho.atlas.api.APIInterface;
 import com.zoho.atlas.database.AppDatabase;
 import com.zoho.atlas.database.AppExecutors;
+import com.zoho.atlas.keys.key;
+import com.zoho.atlas.model.CountryDataDB;
+import com.zoho.atlas.model.ForecastData;
 import com.zoho.atlas.utils.MyMarkerView;
 
 import java.text.DecimalFormat;
@@ -63,7 +62,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ForecastData forecastData;
     String TAG = "MapsActivity";
     private RecyclerView mRecyclerView;
-    private MapsWeatherAdapter mAdapter;
     ImageView edit_Image;
     String url="";
     TextView population,city,country;
@@ -132,10 +130,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onResponse(@NonNull Call<ForecastData> call, @NonNull Response<ForecastData> response) {
                 forecastData = null;
-                /*Log.e(TAG, ""+response.raw().code());
-                Log.e(TAG, ""+response.raw().request().url());
-                Log.e(TAG, ""+response.raw().request().toString());
-                Log.e(TAG, ""+response.body().toString());*/
+                //Log.e(TAG, ""+response.raw().code());
+                //Log.e(TAG, ""+response.raw().request().url());
+                //Log.e(TAG, ""+response.raw().request().toString());
+                //Log.e(TAG, ""+response.body().toString());
                 forecastData = response.body();
                 values.clear();
                // Log.e(TAG, "Data size" + forecastData.getCnt());
@@ -145,7 +143,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         DecimalFormat df = new DecimalFormat("#.##");
                         String formattedtemp = df.format(forecastData.getList().get(i).getMain().getTemp());
                         float val = Float.parseFloat(formattedtemp);
-                        int j = forecastData.getList().get(i).getDt();
                         values.add(new Entry(i, val, getResources().getDrawable(R.drawable.cuverd_rect)));
                         //Log.e(TAG, "Data size 2" + val);
                     } catch (Exception e) {
@@ -193,11 +190,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             // force pinch zoom along both axis
             chart.setPinchZoom(true);
-        }
-
-        XAxis xAxis;
-        {   // // X-Axis Style // //
-            xAxis = chart.getXAxis();
         }
 
         YAxis yAxis;

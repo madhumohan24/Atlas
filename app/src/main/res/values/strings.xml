@@ -1,4 +1,17 @@
 <resources>
     <string name="app_name">Atlas</string>
+    <string name="search">Search</string>
     <string name="title_activity_maps">Map</string>
+    <string name="current_location_forcast">Current Location Forcast</string>
+    <string name="country">Country</string>
+    <string name="forcast">Forcast</string>
+    <string name="today_temperature_4_hours_a_instance">Today Temperature (4 hours a Instance)</string>
+    <string name="population_value">9810427697</string>
+    <string name="population">Population</string>
+    <string name="city_value">Delhi</string>
+    <string name="capital">Capital</string>
+    <string name="country_value">India</string>
+    <string name="country_flag">country flag</string>
+    <string name="date">10-10-2020 15:00</string>
+    <string name="weather_status">Rainy</string>
 </resources>

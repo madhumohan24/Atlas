@@ -1,29 +1,28 @@
 package com.zoho.atlas.activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.bumptech.glide.Glide;
-import com.zoho.atlas.model.CountryData;
-import com.zoho.atlas.model.CountryDataDB;
 import com.zoho.atlas.R;
 import com.zoho.atlas.api.APIClient;
 import com.zoho.atlas.api.APIInterface;
 import com.zoho.atlas.database.AppDatabase;
 import com.zoho.atlas.database.AppExecutors;
+import com.zoho.atlas.model.CountryData;
+import com.zoho.atlas.model.CountryDataDB;
 import com.zoho.atlas.utils.App;
 
 import java.util.List;
@@ -35,7 +34,7 @@ import retrofit2.Response;
 
 public class SplashActivity extends AppCompatActivity {
     ImageView iv_loader;
-    private String TAG = "MainActivity";
+    private final String TAG = "SplashActivity";
     private List<CountryData> countryData;
     private AppDatabase mDb;
     String lat = "", lng = "";
@@ -50,20 +49,14 @@ public class SplashActivity extends AppCompatActivity {
         Glide.with(this).load(R.drawable.map).into(iv_loader);
         mDb = AppDatabase.getInstance(getApplicationContext());
 
-        if (askPermissionForRecord()) {
-            if (!App.appUtils.isNetAvailable()) {
-                alertUserP(SplashActivity.this, "Connection Error", "No Internet connection available", "OK");
-            } else if (!lat.equals("0.0")) {
-                Log.e("LAT", lat);
-                Apicall(lat, lng);
-            }
-        }else{
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        if (askPermissionForLocation()) {
+            internetcheck();
         }
 
+
     }
-    private boolean askPermissionForRecord() {
+    // if permission deined nagavigation need to be done
+    private boolean askPermissionForLocation() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -96,27 +89,30 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                internetcheck();
+                Toast.makeText(getApplicationContext(), "Permission granted", Toast.LENGTH_SHORT).show();
 
-                   // Toast.makeText(getApplicationContext(), "Permission granted", Toast.LENGTH_SHORT).show();
-                    if (!App.appUtils.isNetAvailable()) {
-                        alertUserP(SplashActivity.this, "Connection Error", "No Internet connection available", "OK");
-                    } else if (!lat.equals("0.0")) {
-                        Log.e("LAT", lat);
-                        Apicall(lat, lng);
-                    }
-                } else {
-
-                    Toast.makeText(getApplicationContext(), "Location Permission denied. Please enable via app settings", Toast.LENGTH_SHORT).show();
-                }
-                return;
+            } else {
+                internetcheck();
             }
         }
     }
+
+    public void internetcheck(){
+        if (!App.appUtils.isNetAvailable()) {
+            alertUserP(SplashActivity.this, "Connection Error", "No Internet connection available", "OK");
+        } else if (!lat.equals("0.0")) {
+            Log.e("LAT", lat);
+            Apicall(lat, lng);
+        } else {
+            Apicall("0.0","0.0");
+        }
+    }
+
 
     public void Apicall(final String latitude, final String longitute) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
@@ -136,7 +132,7 @@ public class SplashActivity extends AppCompatActivity {
                             Log.e(TAG, Objects.requireNonNull(response.body().toString()));
                             countryData = response.body();
                             Log.e(TAG, "Data size" + countryData.size());
-                            int i = 0;
+                            int i;
                             for (i = 0; i < countryData.size(); i++) {
                                 final CountryDataDB country = new CountryDataDB(
                                         countryData.get(i).getName(),

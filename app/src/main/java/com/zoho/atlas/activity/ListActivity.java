@@ -1,36 +1,35 @@
 package com.zoho.atlas.activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.content.Context;
+import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.zoho.atlas.keys.key;
-import com.zoho.atlas.model.CountryDataDB;
-import com.zoho.atlas.model.ForecastData;
-import com.zoho.atlas.adapter.WeatherAdapter;
-import com.zoho.atlas.adapter.CountryAdapter;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuItemCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.zoho.atlas.R;
+import com.zoho.atlas.adapter.CountryAdapter;
+import com.zoho.atlas.adapter.WeatherAdapter;
 import com.zoho.atlas.api.APIClient;
 import com.zoho.atlas.api.APIInterface;
 import com.zoho.atlas.database.AppDatabase;
 import com.zoho.atlas.database.AppExecutors;
+import com.zoho.atlas.keys.key;
+import com.zoho.atlas.model.CountryDataDB;
+import com.zoho.atlas.model.ForecastData;
 import com.zoho.atlas.utils.GPSTracker;
 
 import java.util.List;
@@ -41,17 +40,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ListActivity extends AppCompatActivity {
-    private RecyclerView mRecyclerView,mRecyclerViewmap;
+    private RecyclerView mRecyclerViewmap;
     private CountryAdapter mAdapter;
     private AppDatabase mDb;
-    LinearLayout rootview;
-    EditText searchEt;
     Intent intent;
     String lat="",lng="";
-    Button btnSearch,btnClear;
     ForecastData forecastData;
     TextView tv_recyclerViewheading;
-    String TAG="Main Activity";
+    SearchView searchView;
+    Button btn_currentforcast;
+    String TAG="List Activity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,24 +65,32 @@ public class ListActivity extends AppCompatActivity {
         assert lat != null;
         if(!lat.equals("")){
             Apicall(lat,lng);
-        }else{
-            GPSTracker gps = new GPSTracker(this);
-            double latitude = gps.getLatitude();
-            double longitude = gps.getLongitude();
-            lat = ""+latitude;
-            lng = ""+longitude;
-            Apicall(lat,lng);
         }
-
-        rootview = findViewById(R.id.rootview);
-        searchEt = findViewById(R.id.search_et);
-        btnSearch = findViewById(R.id.btnSearch);
-        btnClear = findViewById(R.id.btnClear);
+        btn_currentforcast = findViewById(R.id.btn_currentforcast);
         tv_recyclerViewheading = findViewById(R.id.tv_recyclerViewheading);
-
-
         mRecyclerViewmap = findViewById(R.id.recyclerViewmap);
-       mRecyclerView = findViewById(R.id.recyclerView);
+
+        btn_currentforcast.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GPSTracker gps = new GPSTracker(ListActivity.this);
+                if (!gps.canGetLocation()) {
+                    gps.showSettingsAlert();
+                } else {
+                    double latitude = gps.getLatitude();
+                    double longitude = gps.getLongitude();
+                    lat = ""+latitude;
+                    lng = ""+longitude;
+                    if(!lat.equals("0.0")){
+                        Apicall(lat,lng);
+                    }else{
+                        Toast.makeText(ListActivity.this,"can't able to locate the location. Please try again and check permission and location in settings",Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+        RecyclerView mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         // Initialize the adapter and attach it to the RecyclerView
         mAdapter = new CountryAdapter(this, ListActivity.this);
@@ -102,81 +108,63 @@ public class ListActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
 
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                    // Then just use the following hide keyboard:
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                    assert imm != null;
-                    imm.hideSoftInputFromWindow(rootview.getWindowToken(), 0);
-
-                        String searchWord = searchEt.getText().toString();
-                        if(searchWord.isEmpty()){
-                            searchEt.setError("Please Enter Something");
-                            searchEt.requestFocus();
-
-                        }else{
-                            if(searchWord.length() > 1) {
-                                mAdapter.getFilter().filter(searchWord);
-                            }
-                        }
-
-            }
-        });
-        btnClear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                searchEt.setText("");
-            }
-        });
-        searchEt.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(searchEt.getText().length()>1){
-                    btnClear.setVisibility(View.VISIBLE);
-                }else if(searchEt.getText().length()==0){
-                    mAdapter.updatelist();
-                    btnClear.setVisibility(View.GONE);
-                }else{
-                    btnClear.setVisibility(View.GONE);
+        if (searchItem != null) {
+            searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+            searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+                @Override
+                public boolean onClose() {
+                    //some operation
+                    return false;
                 }
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-        searchEt.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                // Then just use the following hide keyboard:
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                assert imm != null;
-                imm.hideSoftInputFromWindow(rootview.getWindowToken(), 0);
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    String searchWord = v.getText().toString();
-                    if(searchWord.isEmpty()){
-                        searchEt.setError("Please Enter Something");
-                        searchEt.requestFocus();
+            });
+            searchView.setOnSearchClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //some operation
+                }
+            });
+            EditText searchPlate = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+            searchPlate.setHint("Search");
+            View searchPlateView = searchView.findViewById(androidx.appcompat.R.id.search_plate);
+            searchPlateView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent));
+            // use this method for search process
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    // use this method when query submitted
+                    //Toast.makeText(ListActivity.this, query, Toast.LENGTH_SHORT).show();
+                    if(query.isEmpty()){
+                        Toast.makeText(ListActivity.this, "Please Enter Something", Toast.LENGTH_SHORT).show();
 
                     }else{
-                        if(searchWord.length() > 1) {
-                            mAdapter.getFilter().filter(searchWord);
+                        if(query.length() > 1) {
+                            mAdapter.getFilter().filter(query);
                         }
                     }
-                    return true;
+                    return false;
                 }
-                return false;
-            }
-        });
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    // use this method for auto complete search process
+                    mAdapter.getFilter().filter(newText);
+                    return false;
+                }
+            });
+            SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        }
+        return super.onCreateOptionsMenu(menu);
     }
+
+
     public void Apicall(String lat, String lng) {
         Log.e(TAG, "API CALL");
         //Creating an object of our api interface
@@ -188,10 +176,10 @@ public class ListActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ForecastData> call, @NonNull Response<ForecastData> response) {
                 forecastData = null;
                 forecastData = response.body();
-               /* Log.e(TAG, ""+response.raw().code());
+                // Log.e(TAG, ""+response.raw().code());
                 Log.e(TAG, ""+response.raw().request().url());
-                Log.e(TAG, ""+response.raw().request().toString());
-                Log.e(TAG, ""+response.body().toString());*/
+                //Log.e(TAG, ""+response.raw().request().toString());
+                //Log.e(TAG, ""+response.body().toString());
 
                 WeatherAdapter imageAdapter = new WeatherAdapter(ListActivity.this, ListActivity.this,forecastData.getList());
                 mRecyclerViewmap.setLayoutManager(new LinearLayoutManager(ListActivity.this, LinearLayoutManager.HORIZONTAL, false));
@@ -199,6 +187,12 @@ public class ListActivity extends AppCompatActivity {
                 if(forecastData.getList().size()>1){
                     mRecyclerViewmap.setVisibility(View.VISIBLE);
                     tv_recyclerViewheading.setVisibility(View.VISIBLE);
+                    btn_currentforcast.setVisibility(View.GONE);
+                }else{
+                    mRecyclerViewmap.setVisibility(View.GONE);
+                    tv_recyclerViewheading.setVisibility(View.GONE);
+                    btn_currentforcast.setVisibility(View.VISIBLE);
+
                 }
 
             }
@@ -209,4 +203,17 @@ public class ListActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
+    @Override
+    public void onBackPressed() {
+        if (!searchView.isIconified()) {
+            searchView.setIconified(true);
+            //findViewById(R.id.default_title).setVisibility(View.VISIBLE);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
 }
