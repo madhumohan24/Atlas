@@ -60,7 +60,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Intent intent;
     private LineChart chart;
     ForecastData forecastData;
-    String TAG = "MapsActivity";
+    String TAG = "Maps Activity";
     private RecyclerView mRecyclerView;
     ImageView edit_Image;
     String url="";
